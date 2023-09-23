@@ -195,7 +195,7 @@ DETAILS
 Example payload: 
   8000023041
 Looking at the code its obvious that the bytes after 8000 02 get executed
-its 3041 int the exaple payload (ret)
+its 3041 in the exaple payload (ret)
 
 Lets try an interrupt thats supposed to open the lock.
   <unlock_door>
