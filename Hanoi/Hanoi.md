@@ -187,3 +187,18 @@ DETAILS
 460a <_unexpected_>
 460a:  0013           reti	pc
 --------------------------------
+HSM Model 1
+By default, the
+interrupt 0x7D will pass a given password to the HSM, and will set a byte in
+memory if the password entered matches the stored password.
+
+Password are said to be between 8 and 16 chars long
+0x1c is passed as length -> buffer overflow?
+
+User input is stored at 2400, later on inside <login>
+if test_password_valid returns 0 mov.b #0x9e, &0x2410 is jumped over at address 454c
+2410 can be overwritten by user input and is compared to 0x3e later on.
+Lets try 16bytes of random data + 3e as a password.
+
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa3e
+Works as a password
